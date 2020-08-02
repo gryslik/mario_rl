@@ -73,6 +73,8 @@ class DQN:
         if self.memory.size < self.burnin:
             return
         samples = self.memory.sample(batch_size)
+        #import pdb
+        #pdb.set_trace()
         all_states = np.reshape([np.squeeze(x[0]) for x in samples], (batch_size, self.single_frame_dim[0],  self.single_frame_dim[1], self.num_frames_to_stack))
         all_actions = np.reshape([x[1] for x in samples], (batch_size,))
         all_rewards = np.reshape([x[2] for x in samples], (batch_size,))

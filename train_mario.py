@@ -56,11 +56,15 @@ for episode in range(num_episodes):
         my_agent.update_target_model(episode, step, False, False)
 
         new_state, reward, done, info = take_skip_frame_step(env, action, num_frames_to_collapse) #take a step when you repeat the same action for 4 frames
-        new_state = generate_stacked_state(cur_state, new_state) #make the new state (120x128x4) to account for frame stacking
+        #new_state = generate_stacked_state(cur_state, new_state) #make the new state (120x128x4) to account for frame stacking
         step += 1
 
-        reward = check_stuck_and_penalize(current_x_position, info['x_pos'], reward)
+        #reward = check_stuck_and_penalize(current_x_position, info['x_pos'], reward)
 
+        if(new_state.shape != (120,128,4)): #sanity check to make sure model always gives what's expected
+            import pdb
+            pdb.set_trace()
+            
         #Add to memory
         my_agent.remember(cur_state, action, reward, new_state, done)
 

@@ -20,10 +20,11 @@ def pre_process_images(bitmaps):
     image_stack = []
     for i in range(len(bitmaps)):
         image_stack.append(down_sample(remove_color(bitmaps[i])))
-    return max_pool(np.reshape(image_stack, (len(bitmaps), image_stack[0].shape[0], image_stack[0].shape[1])))
+    #return max_pool(np.reshape(image_stack, (len(bitmaps), image_stack[0].shape[0], image_stack[0].shape[1])))
+    return np.reshape(image_stack, (image_stack[0].shape[0], image_stack[0].shape[1], len(bitmaps)))
 
 
-def take_skip_frame_step(env, action, num_frames_to_collapse, render = False):
+def take_skip_frame_step(env, action, num_frames_to_collapse, render=False):
     image_list = []
     image_reward = 0
     for i in range(num_frames_to_collapse):
@@ -33,6 +34,11 @@ def take_skip_frame_step(env, action, num_frames_to_collapse, render = False):
         image_list.append(new_state.copy())
         image_reward += reward
         if done:
+            num_frames_to_repeat = num_frames_to_collapse-i-1
+            ## if we fail during the frames to collapse, we will simply append the last frame enough times to preserve shape
+            for i in range(num_frames_to_repeat):
+                image_list.append(new_state.copy())
+                image_reward += reward
             break
     combined_state = pre_process_images(image_list)
     return combined_state, image_reward, done, info
@@ -47,7 +53,7 @@ def generate_stacked_state(old_state, new_state): #old state is (x,y,num_frames)
             result_state[:, :, i] = new_state
     return result_state
 
-def check_stuck_and_penalize(current_x_position, current_position, reward):
+def check_stuck_and_penalize(current_x_position, current_position, reward): #I don't think this will be needed anymore. It's part of the reward.
     if len(current_x_position) > 250:
         avg_position = round(np.array(current_x_position[-250:]).mean(), 0)
         #current_position = info['x_pos']
