@@ -54,11 +54,11 @@ for idx, model_name in enumerate(models_to_compute):
         time_start = time.time()
         model = tf.keras.models.load_model(model_path + model_name)
 
-        long_state = np.repeat(pre_process_image(env.reset())[:, :, np.newaxis], num_frames_to_stack, axis=2) #reshape it (120x128x4).
+        state = np.repeat(pre_process_image(env.reset())[:, :, np.newaxis], num_frames_to_stack, axis=2) #reshape it (120x128x4).
         done = False;
         step_counter = 0
         while not done and step_counter < 500: # Now we need to take the same action every 4 steps
-            prediction_values = model.predict(np.expand_dims(long_state, axis=0).astype('float16'))
+            prediction_values = model.predict(np.expand_dims(state, axis=0).astype('float16'))
             action = np.argmax(prediction_values)
             state, reward, done, info = take_skip_frame_step(env, action, num_frames_to_collapse, False)
             #long_state = generate_stacked_state(long_state, state)

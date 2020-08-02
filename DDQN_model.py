@@ -25,8 +25,8 @@ class DQN:
         self.env = env
 
         #self.memory = collections.deque(maxlen=10000) #this is slow. Using my custom class.
-        self.memory = ReplayMemory(max_size=10000)
-        self.burnin = 1000
+        self.memory = ReplayMemory(max_size=50000)
+        self.burnin = 3000
 
         self.gamma = 0.9
         self.epsilon = 1

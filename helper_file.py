@@ -15,13 +15,11 @@ def max_pool(bitmap):
 def pre_process_image(bitmap):
     return(down_sample(remove_color(bitmap)))
 
-
 def pre_process_images(bitmaps):
     image_stack = []
     for i in range(len(bitmaps)):
         image_stack.append(down_sample(remove_color(bitmaps[i])))
-    #return max_pool(np.reshape(image_stack, (len(bitmaps), image_stack[0].shape[0], image_stack[0].shape[1])))
-    return np.reshape(image_stack, (image_stack[0].shape[0], image_stack[0].shape[1], len(bitmaps)))
+    return np.dstack(image_stack)
 
 
 def take_skip_frame_step(env, action, num_frames_to_collapse, render=False):

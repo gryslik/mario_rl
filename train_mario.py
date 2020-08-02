@@ -64,7 +64,7 @@ for episode in range(num_episodes):
         if(new_state.shape != (120,128,4)): #sanity check to make sure model always gives what's expected
             import pdb
             pdb.set_trace()
-            
+
         #Add to memory
         my_agent.remember(cur_state, action, reward, new_state, done)
 
