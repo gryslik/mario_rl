@@ -13,12 +13,14 @@ from gym_super_mario_bros.actions import SIMPLE_MOVEMENT, COMPLEX_MOVEMENT, RIGH
 import warnings
 from helper_file import *
 from sys import platform
+import re
+
 
 
 warnings.simplefilter("ignore", lineno=148)
 
 if (platform == "darwin"):
-    model_path = os.path.expanduser("~/gitRepos/mario_rl/trained_models/")
+    model_path = os.path.expanduser("~/gitRepos/mario_rl/deque100000/trained_models_original_deque/")
     os.chdir(os.path.expanduser("~/gitRepos/mario_rl/"))
 else:
     model_path = '/home/ubuntu/data/code/mario2/trained_models/'
@@ -28,13 +30,20 @@ else:
 env = gym_super_mario_bros.make('SuperMarioBros-1-1-v0')
 env = JoypadSpace(env, RIGHT_ONLY)
 
-all_files = os.listdir(model_path)
+all_file_names = os.listdir(model_path)
+all_file_numbers = sorted([convert_to_int(re.split('-|_', x)[1]) for x in os.listdir(model_path) if convert_to_int(re.split('-|_', x)[1]) is not None])
+sorted_file_names = [None]*len(all_file_numbers)
 
-if "travel_distance.csv" in all_files:
+for idx, model_number in enumerate(all_file_numbers):
+    regex = re.compile('episode-' + str(model_number) + '_', re.UNICODE)
+    sorted_file_names[idx] = list(filter(regex.match,all_file_names))[0]
+
+
+if "travel_distance.csv" in sorted_file_names:
     models_processed = pd.read_csv(model_path+"travel_distance.csv")['model_name'].values
-    models_to_compute = [x for x in all_files if (x not in models_processed and x not in ".DS_Store" and  x not in "travel_distance.csv")]
+    models_to_compute = [x for x in sorted_file_names if (x not in models_processed and x not in ".DS_Store" and x not in "travel_distance.csv")]
 else:
-    models_to_compute = [item for item in all_files if (item not in "travel_distance.csv" and item not in ".DS_Store")]
+    models_to_compute = [item for item in sorted_file_names if (item not in "travel_distance.csv" and item not in ".DS_Store")]
 
 
 num_frames_to_stack = 4

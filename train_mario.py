@@ -37,9 +37,10 @@ final_x_position = []
 
 
 ### This is the main execution loop
+print("Epsilon decay value is: " + str(my_agent.epsilon_decay))
 for episode in range(num_episodes):
     print("----------------------------------------------------------------------------")
-    print("Episode: " + str(episode) + " started")
+    print("Episode: " + str(episode) + " started with memory buffer of size: " + str(my_agent.memory.size) + " and writing to index: "+ str(my_agent.memory.index) + " and with epsilon: " + str(my_agent.epsilon))
     time_start = time.time()
     cur_state = np.repeat(pre_process_image(env.reset())[:, :, np.newaxis], num_frames_to_stack, axis=2) #reshape it (120x128x4).
     episode_reward = 0

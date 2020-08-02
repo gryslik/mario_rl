@@ -1,5 +1,7 @@
 import random
 import numpy as np
+import os
+
 
 def remove_color(bitmap):
     return np.mean(bitmap, axis=2).astype(np.uint8)
@@ -53,3 +55,20 @@ def check_stuck_and_penalize(current_x_position, current_position, reward):
             reward += -5  # make it negative so that it doesn't get stuck and tries new things
             reward = max(reward, -15)  # can't go below -15
     return reward
+
+
+def convert_to_int(value):
+    try:
+        return(int(value))
+    except Exception as e:
+        return None
+
+def save_bitmap_data(data,fpath, frame_idx):
+    from matplotlib import pyplot as plt
+    os.makedirs(fpath, exist_ok=True)
+    plt.imsave(fname=fpath + "/" + str(frame_idx) + ".png", arr=data, cmap="gray")
+
+def show_bitmap_data(data):
+    from matplotlib import pyplot as plt
+    plt.imshow(X=data, cmap="gray")
+    plt.show()

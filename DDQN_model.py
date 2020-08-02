@@ -4,17 +4,34 @@ import numpy as np
 import random
 
 
+class ReplayMemory:
+    def __init__(self, max_size):
+        self.buffer = [None] * max_size
+        self.max_size = max_size
+        self.index = 0
+        self.size = 0
+
+    def append(self, obj):
+        self.buffer[self.index] = obj
+        self.size = min(self.size + 1, self.max_size)
+        self.index = (self.index + 1) % self.max_size
+
+    def sample(self, batch_size):
+        indices = random.sample(range(self.size), batch_size)
+        return [self.buffer[index] for index in indices]
+
 class DQN:
     def __init__(self, env, single_frame_dim,  num_frames_to_stack, old_model_filepath=None):
         self.env = env
 
-        self.memory = collections.deque(maxlen=10000)
+        #self.memory = collections.deque(maxlen=10000) #this is slow. Using my custom class.
+        self.memory = ReplayMemory(max_size=10000)
         self.burnin = 1000
 
         self.gamma = 0.9
         self.epsilon = 1
         self.epsilon_min = 0.1
-        self.epsilon_decay = 0.999993
+        self.epsilon_decay = 0.9999995
         self.learning_rate = 0.0003
         self.update_target_step_count = 3000
         self.num_steps_since_last_update = 0
@@ -53,9 +70,9 @@ class DQN:
         self.memory.append([state, action, reward, new_state, done])
 
     def replay(self, batch_size=64):
-        if len(self.memory) < self.burnin:
+        if self.memory.size < self.burnin:
             return
-        samples = random.sample(self.memory, batch_size)
+        samples = self.memory.sample(batch_size)
         all_states = np.reshape([np.squeeze(x[0]) for x in samples], (batch_size, self.single_frame_dim[0],  self.single_frame_dim[1], self.num_frames_to_stack))
         all_actions = np.reshape([x[1] for x in samples], (batch_size,))
         all_rewards = np.reshape([x[2] for x in samples], (batch_size,))
