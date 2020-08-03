@@ -20,7 +20,7 @@ import re
 warnings.simplefilter("ignore", lineno=148)
 
 if (platform == "darwin"):
-    model_path = os.path.expanduser("~/gitRepos/mario_rl/deque100000/trained_models_original_deque/")
+    model_path = os.path.expanduser("~/gitRepos/mario_rl/trained_models//")
     os.chdir(os.path.expanduser("~/gitRepos/mario_rl/"))
 else:
     model_path = '/home/ubuntu/data/code/mario2/trained_models/'

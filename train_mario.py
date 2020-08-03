@@ -51,6 +51,9 @@ for episode in range(num_episodes):
     while not done:
         if(step % 100 == 0):
             print("At step: " + str(step))
+            print_timings = True
+        else:
+            print_timings = False
 
         action = my_agent.act(cur_state) # make a prediction
         my_agent.update_target_model(episode, step, False, False)
@@ -61,15 +64,11 @@ for episode in range(num_episodes):
 
         #reward = check_stuck_and_penalize(current_x_position, info['x_pos'], reward)
 
-        if(new_state.shape != (120,128,4)): #sanity check to make sure model always gives what's expected
-            import pdb
-            pdb.set_trace()
-
         #Add to memory
         my_agent.remember(cur_state, action, reward, new_state, done)
 
         #fit the model
-        my_agent.replay()
+        my_agent.replay(print_time=print_timings)
 
         #set the current_state to the new state
         cur_state = new_state

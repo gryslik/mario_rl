@@ -2,6 +2,7 @@ import collections
 import tensorflow as tf
 import numpy as np
 import random
+import time
 
 
 class ReplayMemory:
@@ -69,26 +70,35 @@ class DQN:
     def remember(self, state, action, reward, new_state, done):
         self.memory.append([state, action, reward, new_state, done])
 
-    def replay(self, batch_size=64):
+    def replay(self, batch_size=64, print_time=False):
         if self.memory.size < self.burnin:
             return
         samples = self.memory.sample(batch_size)
-        #import pdb
-        #pdb.set_trace()
+
+        ########################
+        #Setting Up Data
+        ########################
         all_states = np.reshape([np.squeeze(x[0]) for x in samples], (batch_size, self.single_frame_dim[0],  self.single_frame_dim[1], self.num_frames_to_stack))
         all_actions = np.reshape([x[1] for x in samples], (batch_size,))
         all_rewards = np.reshape([x[2] for x in samples], (batch_size,))
         all_new_states = np.reshape([np.squeeze(x[3]) for x in samples], (batch_size, self.single_frame_dim[0], self.single_frame_dim[1], self.num_frames_to_stack))
         all_dones = np.reshape([x[4] for x in samples], (batch_size,))
 
+        ####################################
+        # Doing the prediction and updating rewards
+        ####################################
         all_targets = np.array(self.model.predict_on_batch(all_states.astype('float16')))  # this is what we will update
         Q_0 = np.array(self.model.predict_on_batch(all_new_states.astype('float16')))  # This is what we use to find what max action we should take
         Q_target = np.array(self.target_model.predict_on_batch(all_new_states.astype('float16')))  # This is the values we will combine with max action to update the target
+
         max_actions = np.argmax(Q_0, axis=1)  # This is the index we will use to take from Q_target
         max_Q_target_values = Q_target[np.arange(len(Q_target)), np.array(max_actions)]  # The target will be updated with this.
-        all_targets[np.arange(len(all_targets)), np.array(all_actions)] = all_rewards + self.gamma * max_Q_target_values * (~all_dones)  # Actually due the update
+        all_targets[np.arange(len(all_targets)), np.array(all_actions)] = all_rewards + self.gamma * max_Q_target_values * (~all_dones)  # Actually do the update
 
+        ######
+        # Training
         self.model.train_on_batch(all_states.astype('float16'), all_targets)  # reweight network to get new targets
+        ######
 
     def act(self, state):
         self.epsilon *= self.epsilon_decay
