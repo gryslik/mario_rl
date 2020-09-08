@@ -1,13 +1,18 @@
 import random
 import numpy as np
 import os
+import cv2
 
 
 def remove_color(bitmap):
     return np.mean(bitmap, axis=2).astype(np.uint8)
 
+# downsampling code adapted from https://blog.paperspace.com/building-double-deep-q-network-super-mario-bros/
 def down_sample(bitmap):
-    return bitmap[::2, ::2]
+    resized_bitmap = cv2.resize(bitmap, (84, 110), interpolation=cv2.INTER_AREA)
+    focused_bitmap = resized_bitmap[18:102, :]
+    focused_bitmap = np.reshape(focused_bitmap, [84, 84])
+    return focused_bitmap
 
 def max_pool(bitmap):
     return np.max(bitmap, axis=0)
@@ -18,9 +23,8 @@ def pre_process_image(bitmap):
 def pre_process_images(bitmaps):
     image_stack = []
     for i in range(len(bitmaps)):
-        image_stack.append(down_sample(remove_color(bitmaps[i])))
+        image_stack.append(pre_process_image(bitmaps[i]))
     return np.dstack(image_stack)
-
 
 def take_skip_frame_step(env, action, num_frames_to_collapse, render=False):
     image_list = []
@@ -59,7 +63,6 @@ def check_stuck_and_penalize(current_x_position, current_position, reward): #I d
             reward += -5  # make it negative so that it doesn't get stuck and tries new things
             reward = max(reward, -15)  # can't go below -15
     return reward
-
 
 def convert_to_int(value):
     try:
