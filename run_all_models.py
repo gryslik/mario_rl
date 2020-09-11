@@ -62,7 +62,6 @@ for idx, model_name in enumerate(models_to_compute):
             prediction_values = model.predict(np.expand_dims(state, axis=0).astype('float16'))
             action = np.argmax(prediction_values)
             state, reward, done, info = take_skip_frame_step(env, action, num_frames_to_collapse, False)
-            #long_state = generate_stacked_state(long_state, state)
             step_counter+=1
 
         all_files = os.listdir(model_path)

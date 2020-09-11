@@ -51,7 +51,6 @@ while not done and step_counter < 2000: # Now we need to take the same action ev
     prediction_values = model.predict(np.expand_dims(state, axis=0).astype('float16'))
     action = np.argmax(prediction_values)
     state, reward, done, info = take_skip_frame_step(env, action, 4, True)
-    #long_state = generate_stacked_state(long_state, state)
     if save_individual_frames:
         for frame_idx in range(num_frames_to_stack):
             save_bitmap_data(state[:,:,frame_idx], video_path + str(model_number)+"/individual frames/" + str(step_counter),frame_idx)

@@ -22,7 +22,7 @@ class ReplayMemory:
         return [self.buffer[index] for index in indices]
 
 class DQN:
-    def __init__(self, env, single_frame_dim,  num_frames_to_stack, old_model_filepath=None):
+    def __init__(self, env, single_frame_dim,  num_frames_to_stack, old_model_filepath=None, old_epsilon_value = None):
         self.env = env
 
         #self.memory = collections.deque(maxlen=10000) #this is slow. Using my custom class.
@@ -39,8 +39,7 @@ class DQN:
         self.num_steps_since_last_update = 0
         self.single_frame_dim = single_frame_dim
         self.num_frames_to_stack = num_frames_to_stack
-        # self.learn_each = 3 ## learn every 4th frame
-        # self.learn_step = 0
+
 
         if(old_model_filepath==None):
             self.model = self.create_model()  # Will do the actual predictions
@@ -48,6 +47,7 @@ class DQN:
         else:
             self.model = tf.keras.models.load_model(old_model_filepath)
             self.target_model = tf.keras.models.load_model(old_model_filepath)
+            self.epsilon = old_epsilon_value
         # Otherwise we are changing the goal at each timestep.
 
     def update_target_model(self, current_episode, current_step, update_by_episode_count, force_update):
@@ -77,11 +77,6 @@ class DQN:
     def replay(self, batch_size=32, print_time=False):
         if self.memory.size < self.burnin:
             return
-        # Break if no training (borrowed from https://towardsdatascience.com/using-reinforcement-learning-to-play-super-mario-bros-on-nes-using-tensorflow-31281e35825)
-
-        # if self.learn_step < self.learn_each:
-        #     self.learn_step += 1
-        #     return
 
         samples = self.memory.sample(batch_size)
 
@@ -109,9 +104,6 @@ class DQN:
         # Training
         self.model.train_on_batch(all_states.astype('float16'), all_targets)  # reweight network to get new targets
         ######
-
-        # # Reset learn step
-        # self.learn_step = 0
 
     def act(self, state):
         self.epsilon *= self.epsilon_decay
