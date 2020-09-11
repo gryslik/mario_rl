@@ -7,8 +7,10 @@ from gym_super_mario_bros.actions import SIMPLE_MOVEMENT, COMPLEX_MOVEMENT, RIGH
 import warnings
 import os
 from sys import platform
-warnings.simplefilter("ignore", lineno=148)
+import sys
+import re
 
+warnings.simplefilter("ignore", lineno=148)
 
 if (platform == "darwin"):
     model_path = os.path.expanduser("~/gitRepos/mario_rl/trained_models/")
@@ -16,6 +18,9 @@ if (platform == "darwin"):
 else:
     model_path = '/home/ubuntu/data/code/mario2/trained_models/'
     os.chdir(os.path.expanduser("~/data/code/mario2/"))
+
+    # log filename 
+    log_fn = "training_log.txt"
 
 from helper_file import *
 from DDQN_model import *
@@ -29,48 +34,60 @@ raw_image_dim = pre_process_image(env.reset()).shape
 num_episodes = 10000
 num_frames_to_collapse = 4
 num_frames_to_stack = 4
-my_agent = DQN(env=env, single_frame_dim=raw_image_dim,num_frames_to_stack=num_frames_to_stack)
+
+# if there is a model name then get file string (for loading specific model)
+if (len(sys.argv) == 2):
+    model_filename = sys.argv[1]
+
+    my_agent = DQN(env=env, single_frame_dim=raw_image_dim, num_frames_to_stack=num_frames_to_stack,
+                   old_model_filepath='trained_models/' + model_filename)
+else:
+    my_agent = DQN(env=env, single_frame_dim=raw_image_dim, num_frames_to_stack=num_frames_to_stack)
+
 totalreward = []
 steps = []
 flag_result = []
 final_x_position = []
 
-
 ### This is the main execution loop
 print("Epsilon decay value is: " + str(my_agent.epsilon_decay))
 for episode in range(num_episodes):
     print("----------------------------------------------------------------------------")
-    print("Episode: " + str(episode) + " started with memory buffer of size: " + str(my_agent.memory.size) + " and writing to index: "+ str(my_agent.memory.index) + " and with epsilon: " + str(my_agent.epsilon))
+    print("Episode: " + str(episode) + " started with memory buffer of size: " + str(
+        my_agent.memory.size) + " and writing to index: " + str(my_agent.memory.index) + " and with epsilon: " + str(
+        my_agent.epsilon))
     time_start = time.time()
-    cur_state = np.repeat(pre_process_image(env.reset())[:, :, np.newaxis], num_frames_to_stack, axis=2) #reshape it (120x128x4).
+    cur_state = np.repeat(pre_process_image(env.reset())[:, :, np.newaxis], num_frames_to_stack,
+                          axis=2)  # reshape it (84x84x4).
     episode_reward = 0
     step = 0
     done = False
     current_x_position = []
 
     while not done:
-        if(step % 100 == 0):
+        if (step % 100 == 0):
             print("At step: " + str(step))
             print_timings = True
         else:
             print_timings = False
 
-        action = my_agent.act(cur_state) # make a prediction
+        action = my_agent.act(cur_state)  # make a prediction
         my_agent.update_target_model(episode, step, False, False)
 
-        new_state, reward, done, info = take_skip_frame_step(env, action, num_frames_to_collapse) #take a step when you repeat the same action for 4 frames
-        #new_state = generate_stacked_state(cur_state, new_state) #make the new state (120x128x4) to account for frame stacking
+        new_state, reward, done, info = take_skip_frame_step(env, action,
+                                                             num_frames_to_collapse)  # take a step when you repeat the same action for 4 frames
+        # new_state = generate_stacked_state(cur_state, new_state) #make the new state (120x128x4) to account for frame stacking
         step += 1
 
-        #reward = check_stuck_and_penalize(current_x_position, info['x_pos'], reward)
+        # reward = check_stuck_and_penalize(current_x_position, info['x_pos'], reward)
 
-        #Add to memory
+        # Add to memory
         my_agent.remember(cur_state, action, reward, new_state, done)
 
-        #fit the model
+        # fit the model
         my_agent.replay(print_time=print_timings)
 
-        #set the current_state to the new state
+        # set the current_state to the new state
         cur_state = new_state
 
         episode_reward += reward
@@ -89,23 +106,47 @@ for episode in range(num_episodes):
     flag_result.append(info['flag_get'])
     final_x_position.append(current_x_position[-1])
 
-
-    #if len(final_x_position) > 2 and final_x_position[-1] >= final_x_position[-2] + 200:
+    # if len(final_x_position) > 2 and final_x_position[-1] >= final_x_position[-2] + 200:
     #    print("Updating model weights due to large improvement. Total reward of: " + str(episode_reward) + " and at position: " + str(final_x_position[-1]) + " compared to position of: " + str(final_x_position[-2]))
     #    my_agent.update_target_model(episode, step, False, True)
     #    my_agent.save_model(model_path + "episode-{}_model_improvement.h5".format(episode))
     if info['flag_get']:
-        print("Episode: " + str(episode) + " -- SUCCESS -- with a total reward of: " + str(episode_reward) + " and at position: " + str(final_x_position[-1]))
+
+        info_str = "Episode: " + str(episode) + " -- SUCCESS -- with a total reward of: " + str(
+            episode_reward) + "and at position: " + str(final_x_position[-1])
+
+        print(info_str)
         my_agent.save_model(model_path + "episode-{}_model_success.h5".format(episode))
+
     else:
-        print("Episode: " + str(episode) + " -- FAILURE -- with a total reward of: " + str(episode_reward) + " and at position: " + str(final_x_position[-1]))
+        info_str = "Episode: " + str(episode) + " -- FAILURE -- with a total reward of: " + str(
+            episode_reward) + " and at position: " + str(final_x_position[-1])
+
+        print(info_str)
         if episode % 10 == 0:
             my_agent.save_model(model_path + "episode-{}_model_failure.h5".format(episode))
 
     time_end = time.time()
     tf.keras.backend.clear_session()
-    print("Episode: " + str(int(episode)) + " completed in steps/time/avg_running_reward: " + str(steps[-1]) + " / " + str(int(time_end - time_start)) + " / " + str(np.array(totalreward)[-100:].mean()))
+
+    print("Episode: " + str(int(episode)) + " completed in steps/time/avg_running_reward: " + str(
+        steps[-1]) + " / " + str(int(time_end - time_start)) + " / " + str(np.array(totalreward)[-100:].mean()))
     print("----------------------------------------------------------------------------")
+
+    ## logging info to log file
+    info_str = "Episode: " + str(int(episode)) + "; steps: " + str(steps[-1]) + "; time: " + str(
+        int(time_end - time_start)) + "; epsilon: " + str(my_agent.epsilon) + "; total reward: " + str(
+        episode_reward) + "; final position: " + str(final_x_position[-1]) + "; avg_running_reward: " + str(
+        np.array(totalreward)[-100:].mean())
+
+    ## write to log file
+    log = open(log_fn, "a+")  # append mode and create file if it doesnt exist
+    log.write(info_str +
+              "\n" +
+              "----------------------------------------------------------------------------" +
+              "\n")
+    log.close()
+
 env.close()
 
 results_df = pd.DataFrame(totalreward, columns=['episode_reward'])

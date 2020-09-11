@@ -26,18 +26,21 @@ class DQN:
         self.env = env
 
         #self.memory = collections.deque(maxlen=10000) #this is slow. Using my custom class.
-        self.memory = ReplayMemory(max_size=50000)
         self.burnin = 3000
+        self.memory = ReplayMemory(max_size=30000)
 
         self.gamma = 0.9
-        self.epsilon = 1
-        self.epsilon_min = 0.1
-        self.epsilon_decay = 0.9999995
-        self.learning_rate = 0.0003
-        self.update_target_step_count = 3000
+        self.epsilon = 1.0
+        # self.epsilon = 0.2 ## when restarting training...(should automate this)
+        self.epsilon_min = 0.02
+        self.epsilon_decay = 0.999995
+        self.learning_rate = 0.00025
+        self.update_target_step_count = 5000
         self.num_steps_since_last_update = 0
         self.single_frame_dim = single_frame_dim
         self.num_frames_to_stack = num_frames_to_stack
+        # self.learn_each = 3 ## learn every 4th frame
+        # self.learn_step = 0
 
         if(old_model_filepath==None):
             self.model = self.create_model()  # Will do the actual predictions
@@ -58,21 +61,28 @@ class DQN:
 
     def create_model(self):
         model = tf.keras.Sequential()
-        model.add(tf.keras.layers.Conv2D(32, 8, 8, input_shape=(self.single_frame_dim[0], self.single_frame_dim[1], self.num_frames_to_stack), activation="relu"))
-        model.add(tf.keras.layers.Conv2D(64, 4, 4, activation="relu"))
-        model.add(tf.keras.layers.Conv2D(64, 3, 3, activation="relu"))
+        model.add(tf.keras.layers.Conv2D(32, 8, 4, input_shape=(self.single_frame_dim[0], self.single_frame_dim[1], self.num_frames_to_stack), activation="relu"))
+        model.add(tf.keras.layers.Conv2D(64, 4, 2, activation="relu"))
+        model.add(tf.keras.layers.Conv2D(64, 3, 1, activation="relu"))
         model.add(tf.keras.layers.Flatten())
         model.add(tf.keras.layers.Dense(512, activation="relu"))
         model.add(tf.keras.layers.Dense(self.env.action_space.n))
-        model.compile(loss="mean_squared_error", optimizer=tf.keras.optimizers.Adam(lr=self.learning_rate))
+        # model.compile(loss="mean_squared_error", optimizer=tf.keras.optimizers.Adam(lr=self.learning_rate))
+        model.compile(loss=tf.keras.losses.Huber(), optimizer=tf.keras.optimizers.Adam(lr=self.learning_rate)) ## huber loss takes advantage of l1/l2
         return model
 
     def remember(self, state, action, reward, new_state, done):
         self.memory.append([state, action, reward, new_state, done])
 
-    def replay(self, batch_size=64, print_time=False):
+    def replay(self, batch_size=32, print_time=False):
         if self.memory.size < self.burnin:
             return
+        # Break if no training (borrowed from https://towardsdatascience.com/using-reinforcement-learning-to-play-super-mario-bros-on-nes-using-tensorflow-31281e35825)
+
+        # if self.learn_step < self.learn_each:
+        #     self.learn_step += 1
+        #     return
+
         samples = self.memory.sample(batch_size)
 
         ########################
@@ -99,6 +109,9 @@ class DQN:
         # Training
         self.model.train_on_batch(all_states.astype('float16'), all_targets)  # reweight network to get new targets
         ######
+
+        # # Reset learn step
+        # self.learn_step = 0
 
     def act(self, state):
         self.epsilon *= self.epsilon_decay

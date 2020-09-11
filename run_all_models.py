@@ -22,6 +22,7 @@ warnings.simplefilter("ignore", lineno=148)
 if (platform == "darwin"):
     model_path = os.path.expanduser("~/gitRepos/mario_rl/trained_models//")
     os.chdir(os.path.expanduser("~/gitRepos/mario_rl/"))
+
 else:
     model_path = '/home/ubuntu/data/code/mario2/trained_models/'
     os.chdir(os.path.expanduser("~/data/code/mario2/"))
