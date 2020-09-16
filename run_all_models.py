@@ -20,7 +20,7 @@ import re
 warnings.simplefilter("ignore", lineno=148)
 
 if (platform == "darwin"):
-    model_path = os.path.expanduser("~/gitRepos/mario_rl/trained_models//")
+    model_path = os.path.expanduser("~/gitRepos/mario_rl/trained_models_GPU_new_window_J_settings/")
     os.chdir(os.path.expanduser("~/gitRepos/mario_rl/"))
 
 else:
