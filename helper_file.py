@@ -9,11 +9,8 @@ def remove_color(bitmap):
 
 # downsampling code adapted from https://blog.paperspace.com/building-double-deep-q-network-super-mario-bros/
 def down_sample(bitmap):
-    resized_bitmap = cv2.resize(bitmap, (128, 120), interpolation=cv2.INTER_AREA)
-    #focused_bitmap = resized_bitmap[18:102, :]
-    #focused_bitmap = np.reshape(focused_bitmap, [84, 84])
-    #return focused_bitmap
-    return resized_bitmap[20:110, :]
+    resized_bitmap = cv2.resize(bitmap, (128, 120), interpolation=cv2.INTER_AREA) #This halves the picture in each dimension
+    return resized_bitmap
 
 def max_pool(bitmap):
     return np.max(bitmap, axis=0)
