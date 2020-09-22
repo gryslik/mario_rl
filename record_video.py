@@ -21,7 +21,7 @@ model_number = int(sys.argv[1])
 #model_number = 4200
 
 if (platform == "darwin"):
-    model_path = os.path.expanduser("~")
+    model_path = os.path.expanduser("~/gitRepos/mario_rl/trained_models/")
     os.chdir(os.path.expanduser("~/gitRepos/mario_rl/"))
     video_path = os.path.expanduser("~/gitRepos/mario_rl/recorded_videos/")
 else:
