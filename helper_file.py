@@ -9,7 +9,7 @@ def remove_color(bitmap):
 
 # downsampling code adapted from https://blog.paperspace.com/building-double-deep-q-network-super-mario-bros/
 def down_sample(bitmap):
-    resized_bitmap = cv2.resize(bitmap, (128, 120), interpolation=cv2.INTER_AREA) #This halves the picture in each dimension
+    resized_bitmap = cv2.resize(bitmap, (128, 120), interpolation=cv2.INTER_AREA)[20:, :] #This halves the picture in each dimension. It then cuts out the top of the frame with score and other constantly changing information
     return resized_bitmap
 
 def max_pool(bitmap):
