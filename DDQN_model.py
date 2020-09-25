@@ -61,9 +61,9 @@ class DQN:
 
     def create_model(self):
         model = tf.keras.Sequential()
-        model.add(tf.keras.layers.Conv2D(32, 8, 8, input_shape=(self.single_frame_dim[0], self.single_frame_dim[1], self.num_frames_to_stack), activation="relu"))
-        model.add(tf.keras.layers.Conv2D(64, 4, 4, activation="relu"))
-        model.add(tf.keras.layers.Conv2D(64, 3, 3, activation="relu"))
+        model.add(tf.keras.layers.Conv2D(32, 8, 4, input_shape=(self.single_frame_dim[0], self.single_frame_dim[1], self.num_frames_to_stack), activation="relu"))
+        model.add(tf.keras.layers.Conv2D(64, 4, 2, activation="relu"))
+        model.add(tf.keras.layers.Conv2D(64, 3, 1, activation="relu"))
         model.add(tf.keras.layers.Flatten())
         model.add(tf.keras.layers.Dense(512, activation="relu"))
         model.add(tf.keras.layers.Dense(self.env.action_space.n))
