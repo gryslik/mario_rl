@@ -33,7 +33,7 @@ class DQN:
         self.epsilon = 1.0
         # self.epsilon = 0.2 ## when restarting training...(should automate this)
         self.epsilon_min = 0.1
-        self.epsilon_decay = 0.9999995
+        self.epsilon_decay = 0.999995
         self.learning_rate = 0.0003
         self.update_target_step_count = 3000
         self.num_steps_since_last_update = 0
